@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Group Expense Split App – Android + Ktor Design</title>
+</head>
+<body>
+
+<h1>Design & Implementation: Group Expense Split App</h1>
+
+<hr>
+
+<h2>1. High-Level System Architecture</h2>
+
+<pre>
+Android App (Kotlin, MVVM)
+        |
+        |  REST API (JSON, JWT)
+        v
+Ktor Backend (Kotlin)
+        |
+        v
+Database (PostgreSQL / MySQL)
+</pre>
+
+<p>
+    <b>Explanation:</b><br>
+    The Android app acts as a client. All business logic, balance calculation,
+    and data storage are handled by the Ktor backend.
+    This ensures data consistency across all users.
+</p>
+
+<hr>
+
+<h2>2. Android Application Structure (Kotlin)</h2>
+
+<h3>2.1 Architecture Pattern</h3>
+<p><b>MVVM (Model–View–ViewModel)</b></p>
+
+<ul>
+    <li>View → UI (Compose / XML)</li>
+    <li>ViewModel → Business logic</li>
+    <li>Repository → API communication</li>
+</ul>
+
+<hr>
+
+<h3>2.2 Android Package Structure</h3>
+
+<pre>
+com.example.expensesplit
+│
+├── ui
+│   ├── login
+│   │   └── LoginScreen.kt
+│   ├── group
+│   │   └── GroupListScreen.kt
+│   ├── expense
+│   │   └── AddExpenseScreen.kt
+│   └── balance
+│       └── BalanceScreen.kt
+│
+├── viewmodel
+│   ├── LoginViewModel.kt
+│   ├── GroupViewModel.kt
+│   └── ExpenseViewModel.kt
+│
+├── repository
+│   ├── AuthRepository.kt
+│   ├── GroupRepository.kt
+│   └── ExpenseRepository.kt
+│
+├── network
+│   ├── ApiService.kt
+│   ├── KtorClient.kt
+│   └── AuthInterceptor.kt
+│
+├── model
+│   ├── User.kt
+│   ├── Group.kt
+│   └── Expense.kt
+│
+└── util
+    └── Constants.kt
+</pre>
+
+<hr>
+
+<h2>3. Android Implementation (Kotlin)</h2>
+
+<h3>3.1 ViewModel Example</h3>
+
+<pre><code>
+class ExpenseViewModel(
+    private val repository: ExpenseRepository
+) : ViewModel() {
+
+    private val _balances = MutableStateFlow<Map<String, Double>>(emptyMap())
+    val balances = _balances.asStateFlow()
+
+    fun loadBalances(groupId: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val result = repository.getBalances(groupId)
+            _balances.value = result
+        }
+    }
+}
+</code></pre>
+
+<p>
+    <b>Interview Explanation:</b><br>
+<ul>
+    <li><code>viewModelScope</code> ensures lifecycle safety</li>
+    <li><code>Dispatchers.IO</code> is used for network calls</li>
+    <li><code>StateFlow</code> provides observable state to UI</li>
+</ul>
+</p>
+
+<hr>
+
+<h2>4. Ktor Backend Structure</h2>
+
+<h3>4.1 Backend Package Structure</h3>
+
+<pre>
+com.example.expenseserver
+│
+├── routes
+│   ├── AuthRoutes.kt
+│   ├── GroupRoutes.kt
+│   └── ExpenseRoutes.kt
+│
+├── service
+│   ├── AuthService.kt
+│   ├── GroupService.kt
+│   └── BalanceService.kt
+│
+├── repository
+│   ├── UserRepository.kt
+│   ├── GroupRepository.kt
+│   └── ExpenseRepository.kt
+│
+├── model
+│   ├── User.kt
+│   ├── Group.kt
+│   └── Expense.kt
+│
+├── db
+│   ├── DatabaseFactory.kt
+│   └── Tables.kt
+│
+├── security
+│   └── JwtConfig.kt
+│
+└── Application.kt
+</pre>
+
+<hr>
+
+<h2>5. Ktor API Example</h2>
+
+<h3>5.1 Add Expense API</h3>
+
+<pre><code>
+post("/groups/{groupId}/expenses") {
+    val expense = call.receive<ExpenseRequest>()
+    expenseService.addExpense(expense)
+    call.respond(HttpStatusCode.Created)
+}
+</code></pre>
+
+<hr>
+
+<h2>6. Balance Calculation Logic (Core Feature)</h2>
+
+<pre><code>
+fun calculateBalances(expenses: List<Expense>): Map<String, Double> {
+    val balances = mutableMapOf<String, Double>()
+
+    expenses.forEach { expense ->
+        val share = expense.amount / expense.participants.size
+
+        expense.participants.forEach { userId ->
+            balances[userId] = balances.getOrDefault(userId, 0.0) - share
+        }
+
+        balances[expense.paidBy] =
+            balances.getOrDefault(expense.paidBy, 0.0) + expense.amount
+    }
+    return balances
+}
+</code></pre>
+
+<p>
+    <b>Interview Explanation:</b><br>
+<ul>
+    <li>Backend calculates balances to avoid inconsistency</li>
+    <li>Single source of truth</li>
+    <li>Prevents manipulation on client side</li>
+</ul>
+</p>
+
+<hr>
+
+<h2>7. Authentication (JWT)</h2>
+
+<p>
+    Flow:
+<ol>
+    <li>User logs in</li>
+    <li>Ktor validates credentials</li>
+    <li>JWT token returned</li>
+    <li>Android sends token in headers</li>
+</ol>
+</p>
+
+<hr>
+
+<h2>8. Data Synchronization</h2>
+
+<p>
+    All users see the same group data because:
+<ul>
+    <li>Data is stored centrally in database</li>
+    <li>Each app fetches latest state from backend</li>
+    <li>Optional: WebSockets for real-time updates</li>
+</ul>
+</p>
+
+<hr>
+
+<h2>9. Final Interview Summary</h2>
+
+<p>
+    <b>One-line answer:</b><br>
+    “I built a Group Expense Split Android app using MVVM and Coroutines.
+    The app communicates with a Ktor backend via REST APIs.
+    All expense calculations and data persistence are handled on the server,
+    ensuring consistency, security, and scalability.”
+</p>
+
+<p>
+    <b>Result:</b> 👉 <b>Strong Feature-Level Android Developer</b>
+</p>
+
+</body>
+</html>

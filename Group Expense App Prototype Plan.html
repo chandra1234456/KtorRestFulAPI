@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Group Expense App Prototype Plan</title>
+</head>
+<body>
+
+<h1>Group Expense Split App – Prototype Plan</h1>
+
+<hr>
+
+<h2>1. Timeline & Phases</h2>
+
+<table border="1" cellpadding="5">
+    <tr>
+        <th>Day</th>
+        <th>Task</th>
+        <th>Output</th>
+        <th>Time</th>
+    </tr>
+    <tr>
+        <td>1</td>
+        <td>Requirements & Design</td>
+        <td>Architecture diagram, MVP features, DB schema</td>
+        <td>4–6 hours</td>
+    </tr>
+    <tr>
+        <td>2</td>
+        <td>Backend Setup</td>
+        <td>Ktor project, User & Group API, H2 DB</td>
+        <td>6–8 hours</td>
+    </tr>
+    <tr>
+        <td>3</td>
+        <td>Expenses & Balance Logic</td>
+        <td>Expense API, Balance calculation, JWT auth</td>
+        <td>6–8 hours</td>
+    </tr>
+    <tr>
+        <td>4</td>
+        <td>Android Setup</td>
+        <td>Project structure, MVVM, basic screens, API calls</td>
+        <td>6–8 hours</td>
+    </tr>
+    <tr>
+        <td>5</td>
+        <td>Balance & UI</td>
+        <td>Fetch balances from backend, connect expense submission</td>
+        <td>6–8 hours</td>
+    </tr>
+    <tr>
+        <td>6</td>
+        <td>Polish & Local Testing</td>
+        <td>Edge-case testing, bug fixes, demo-ready prototype</td>
+        <td>4–6 hours</td>
+    </tr>
+</table>
+
+<hr>
+
+<h2>2. Android Project Structure (Kotlin)</h2>
+
+<pre>
+com.example.expensesplit
+│
+├── ui
+│   ├── login/LoginScreen.kt
+│   ├── group/GroupListScreen.kt
+│   ├── expense/AddExpenseScreen.kt
+│   └── balance/BalanceScreen.kt
+│
+├── viewmodel
+│   ├── LoginViewModel.kt
+│   ├── GroupViewModel.kt
+│   └── ExpenseViewModel.kt
+│
+├── repository
+│   ├── AuthRepository.kt
+│   ├── GroupRepository.kt
+│   └── ExpenseRepository.kt
+│
+├── network
+│   ├── ApiService.kt
+│   ├── KtorClient.kt
+│   └── AuthInterceptor.kt
+│
+├── model
+│   ├── User.kt
+│   ├── Group.kt
+│   └── Expense.kt
+│
+└── util
+    └── Constants.kt
+</pre>
+
+<hr>
+
+<h2>3. Ktor Backend Project Structure (Kotlin)</h2>
+
+<pre>
+com.example.expenseserver
+│
+├── routes
+│   ├── AuthRoutes.kt
+│   ├── GroupRoutes.kt
+│   └── ExpenseRoutes.kt
+│
+├── service
+│   ├── AuthService.kt
+│   ├── GroupService.kt
+│   └── BalanceService.kt
+│
+├── repository
+│   ├── UserRepository.kt
+│   ├── GroupRepository.kt
+│   └── ExpenseRepository.kt
+│
+├── model
+│   ├── User.kt
+│   ├── Group.kt
+│   └── Expense.kt
+│
+├── db
+│   ├── DatabaseFactory.kt
+│   └── Tables.kt
+│
+├── security
+│   └── JwtConfig.kt
+│
+└── Application.kt
+</pre>
+
+<hr>
+
+<h2>4. Key Backend Endpoints</h2>
+
+<ul>
+    <li><b>POST /auth/login</b> – User login, returns JWT</li>
+    <li><b>POST /auth/signup</b> – Create new user</li>
+    <li><b>GET /groups</b> – Get user groups</li>
+    <li><b>POST /groups</b> – Create new group</li>
+    <li><b>GET /groups/{groupId}/expenses</b> – Get expenses in a group</li>
+    <li><b>POST /groups/{groupId}/expenses</b> – Add expense</li>
+    <li><b>GET /groups/{groupId}/balances</b> – Get calculated balances</li>
+</ul>
+
+<hr>
+
+<h2>5. Key Android Screens</h2>
+
+<ul>
+    <li><b>Login Screen</b> – User login, JWT stored in SharedPreferences</li>
+    <li><b>Group List Screen</b> – Shows all user groups</li>
+    <li><b>Add Expense Screen</b> – Enter expense amount, payer, participants</li>
+    <li><b>Balance Screen</b> – Displays net balance per user, +ve = receive, -ve = owes</li>
+</ul>
+
+<hr>
+
+<h2>6. Core Logic – Balance Calculation</h2>
+
+<pre><code>
+fun calculateBalances(expenses: List<Expense>): Map<String, Double> {
+    val balances = mutableMapOf<String, Double>()
+
+    expenses.forEach { expense ->
+        val share = expense.amount / expense.participants.size
+
+        expense.participants.forEach { userId ->
+            balances[userId] = balances.getOrDefault(userId, 0.0) - share
+        }
+
+        balances[expense.paidBy] =
+            balances.getOrDefault(expense.paidBy, 0.0) + expense.amount
+    }
+    return balances
+}
+</code></pre>
+
+<hr>
+
+<h2>7. Authentication & Security</h2>
+
+<p>
+<ul>
+    <li>JWT authentication in Ktor</li>
+    <li>Android sends JWT in headers for every API call</li>
+    <li>Backend verifies JWT and ensures only group members access group data</li>
+</ul>
+</p>
+
+<hr>
+
+<h2>8. Local Testing Setup</h2>
+
+<ul>
+    <li>Use H2 database for backend local testing</li>
+    <li>Run Ktor backend locally (e.g., http://localhost:8080)</li>
+    <li>Configure Android app Ktor client to point to local backend</li>
+    <li>Test full flow: create user → create group → add expense → view balance</li>
+</ul>
+
+<hr>
+
+<h2>9. Summary</h2>
+
+<p>
+    By following this plan, you can have a **working local prototype** in **5–6 days**.
+    This includes:
+<ul>
+    <li>Android MVVM app with coroutines</li>
+    <li>Ktor backend with REST APIs and JWT</li>
+    <li>Balance calculation logic centralized on backend</li>
+    <li>Local testing setup with H2 DB</li>
+</ul>
+</p>
+
+<p>
+    <b>Tip for Interviews:</b> Memorize the flow: <br>
+    <i>Android App (MVVM + Coroutines) → Ktor REST API → Database → JWT → Shared Balance Logic</i>
+</p>
+
+</body>
+</html>
