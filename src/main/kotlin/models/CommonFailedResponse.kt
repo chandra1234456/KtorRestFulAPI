@@ -3,7 +3,7 @@ package models
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class CommonResponseModel<T>(
+data class CommonFailedResponse<T>(
     val responseCode: String,
     val responseMessage: String,
     val responseData: T? = null

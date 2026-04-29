@@ -14,7 +14,7 @@ import kotlinx.serialization.json.Json
 import org.slf4j.event.Level
 import plugin.configureSerialization
 import routes.authRoutes
-import routes.insertExpenses
+import routes.expenseRoutes
 import services.AuthService
 import services.ExpenseService
 
@@ -58,7 +58,7 @@ fun Application.module() {
 
     routing {
         authRoutes(authService)
-        insertExpenses(expenseService)
+        expenseRoutes(expenseService)
     }
 
 
