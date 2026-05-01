@@ -47,4 +47,31 @@ class ExpenseService(private val expenseDao: ExpenseDao) {
             encryptedJson
         )
     }
+
+    fun editExpense(req: AddCustomerExpenses): CommonResponseModel<String> {
+        val error = validateExpense(req)
+        if (error != null) {
+            return CommonResponseModel(
+                responseCode = error.code,
+                responseMessage = error.message,
+                responseData = null
+            )
+        }
+        expenseDao.insertUser(
+            req.amount ?: 0,
+            req.attachMeantBill ?: "",
+            req.notesReference ?: "",
+            req.transactionDate ?: "",
+            req.category ?: "",
+            req.transactionType ?: "",
+            req.timeStamp ?: "",
+            req.userId?:0
+        )
+        return CommonResponseModel(
+            ResponseCodes.SUCCESS,
+            "Success",
+            "Data Saved Successfully"
+        )
+    }
+
 }

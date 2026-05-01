@@ -45,4 +45,15 @@ fun Route.expenseRoutes(authService: ExpenseService) {
             call.respond(result)
         }
     }
+    route("/expense") {
+        post("/editExpense") {
+            val request = call.receive<CommonRequestModel>()
+            val encrypted = request.requestBody
+                ?: throw IllegalArgumentException("requestBody is null")
+            val decryptedJson = AESUtil.decrypt(encrypted, SECRET_KEY)
+            val addExpenseRequest = Json.decodeFromString<AddCustomerExpenses>(decryptedJson)
+            val result = authService.editExpense(addExpenseRequest)
+            call.respond(result)
+        }
+    }
 }
