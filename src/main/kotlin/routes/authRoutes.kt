@@ -40,7 +40,6 @@ fun Route.authRoutes(authService: AuthService) {
                 call.respond(result)
             } catch (e: Exception) {
                 e.printStackTrace()
-
                 call.respond(
                     CommonResponseModel<LoginResponse>(
                         responseCode = "500",
